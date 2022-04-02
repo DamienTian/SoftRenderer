@@ -1,0 +1,23 @@
+﻿  Bound.cpp
+  Camera.cpp
+d:\tianhao\camera.h(14): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+  CGStudy_HaoTian.cpp
+d:\tianhao\camera.h(14): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+  Color.cpp
+  Light.cpp
+  Line.cpp
+  Mathf.cpp
+  Mesh.cpp
+d:\tianhao\camera.h(14): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+  Renderer.cpp
+d:\tianhao\camera.h(14): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+  Scanline.cpp
+  stdafx.cpp
+  Transform.cpp
+d:\tianhao\camera.h(14): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+  Trapezoid.cpp
+  Triangle.cpp
+  Vertex.cpp
+  Window.cpp
+  正在生成代码...
+  HaoTian_graphicswork.vcxproj -> D:\tianhao\x64\Debug\HaoTian_graphicswork.exe

@@ -1,0 +1,6 @@
+﻿  CGStudy_HaoTian.cpp
+d:\tianhao\camera.h(14): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+d:\tianhao\cgstudy_haotian.cpp(378): warning C4018: “<”: 有符号/无符号不匹配
+d:\tianhao\cgstudy_haotian.cpp(474): warning C4305: “+=”: 从“double”到“_FLOAT”截断
+LINK : warning LNK4075: 忽略“/INCREMENTAL”(由于“/OPT:ICF”规范)
+  HaoTian_graphicswork.vcxproj -> D:\tianhao\Release\HaoTian_graphicswork.exe

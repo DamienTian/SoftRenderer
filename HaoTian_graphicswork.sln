@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HaoTian_graphicswork", "HaoTian_graphicswork.vcxproj", "{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}.Debug|x64.ActiveCfg = Debug|x64
+		{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}.Debug|x64.Build.0 = Debug|x64
+		{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}.Debug|x86.ActiveCfg = Debug|Win32
+		{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}.Debug|x86.Build.0 = Debug|Win32
+		{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}.Release|x64.ActiveCfg = Release|x64
+		{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}.Release|x64.Build.0 = Release|x64
+		{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}.Release|x86.ActiveCfg = Release|Win32
+		{EF177CC2-5AD7-43BA-B17A-757A7CF3A280}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {98AFA12D-9BA2-4910-A005-B8E1BE925550}
+	EndGlobalSection
+EndGlobal

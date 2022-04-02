@@ -1,0 +1,41 @@
+/*
+Pixel.cpp	像素（用于扫描线内部）
+图形学自学任务
+author：田昊
+
+* 参考：晓峰哥 NB！
+*/
+
+#include "Pixel.h"
+
+Pixel::Pixel(){}
+
+Pixel::Pixel(Vector2 position, Vector3 normal, Vector2 textureCoord, Color color, _FLOAT depth) {
+	_position = position;
+	_normal = normal;
+	_textureCoord = textureCoord;
+	_color = color;
+	_depth = depth;
+}
+
+Pixel::Pixel(Vector4 position, Vector4 normal, _FLOAT u, _FLOAT v, Color color) {
+	_position = Vector2(position._x, position._y);
+	_normal = Vector3(normal._x, position._y, position._z);
+	_textureCoord = Vector2(u, v);
+	_color = color;
+	_depth = position._w;
+}
+
+Pixel::~Pixel(){}
+
+Pixel Interpolate(Pixel& p1, Pixel& p2, _FLOAT t) {
+	Pixel result = Pixel(
+		Interpolate(p1._position, p2._position, t),
+		Interpolate(p1._normal, p2._normal, t),
+		Interpolate(p1._textureCoord, p2._textureCoord, t),
+		Interpolate(p1._color, p2._color, t),
+		Interpolate(p1._depth, p2._depth, t)
+	);
+
+	return result;
+}

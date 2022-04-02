@@ -1,0 +1,92 @@
+/*
+Mesh.cpp 渲染对象
+图形学自学任务
+author：田昊
+
+* 参考：BlauHimmel 一个简单光栅器的实现
+*/
+
+//#include "stdafx.h"
+#include "Mesh.h"
+
+Mesh::Mesh() {
+	_verticesBuffer = nullptr;
+	_verticesCount = 0;
+	_indicesBuffer = nullptr;
+	_indicesCount = 0;
+}
+
+Mesh::Mesh(_INT verticesCount, _INT indexCount) {
+	_verticesCount = verticesCount;
+	_verticesBuffer = new Vertex[_verticesCount];
+	_indicesCount = indexCount;
+	_indicesBuffer = new _INT[_indicesCount];
+}
+
+Mesh::Mesh(const Mesh& other) {
+	_verticesCount = other._verticesCount;
+	if (_verticesCount > 0) {
+		// 清空之前的顶点缓存
+		if (_verticesBuffer != nullptr) {
+			delete[]_verticesBuffer;
+			_verticesBuffer = nullptr;
+		}
+		_verticesBuffer = new Vertex[_verticesCount];
+		for (int i = 0; i < _verticesCount; ++i) {
+			_verticesBuffer[i] = other._verticesBuffer[i];
+		}
+	}
+	_indicesCount = other._indicesCount;
+	if (_indicesCount > 0) {
+		// 清空之前的索引缓存
+		if (_indicesBuffer != nullptr) {
+			delete[]_indicesBuffer;
+			_indicesBuffer = nullptr;
+		}
+		_indicesBuffer = new _INT[_indicesCount];
+		for (int i = 0; i < _indicesCount; ++i) {
+			_indicesBuffer[i] = other._indicesBuffer[i];
+		}
+	}
+	else {
+		if (_verticesBuffer != nullptr) {
+			delete[]_verticesBuffer;
+			_verticesBuffer = nullptr;
+		}
+		if (_indicesBuffer != nullptr) {
+			delete[]_indicesBuffer;
+			_indicesBuffer = nullptr;
+		}
+	}
+}
+
+Mesh::~Mesh()
+{
+	if (_verticesBuffer != nullptr) {
+		delete[]_verticesBuffer;
+		_verticesBuffer = nullptr;
+	}
+	if (_indicesBuffer != nullptr) {
+		delete[]_indicesBuffer;
+		_indicesBuffer = nullptr;
+	}
+}
+
+void Mesh::InitBound(AABB * bound) {
+	_bound = bound;
+	// 根据加入的 mesh 顶点更新包围盒的大小
+	Vector4 minPos = _verticesBuffer[0]._position;
+	Vector4 maxPos = _verticesBuffer[0]._position;
+	for (int i = 1; i < _verticesCount; i++) {
+		Vector4 curr = _verticesBuffer[i]._position;
+		if (minPos._x > curr._x) { minPos._x = curr._x; }
+		if (minPos._y > curr._y) { minPos._y = curr._y; }
+		if (minPos._z > curr._y) { minPos._z = curr._z; }
+		if (maxPos._x < curr._x) { maxPos._x = curr._x; }
+		if (maxPos._y < curr._y) { maxPos._y = curr._y; }
+		if (maxPos._z < curr._y) { maxPos._z = curr._z; }
+	}
+	bound->_vMin = minPos;
+	bound->_vMax = maxPos;
+	bound->_center = (bound->_vMin + bound->_vMax) * 0.5f;
+}

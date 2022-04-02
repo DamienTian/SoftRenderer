@@ -1,0 +1,342 @@
+/*
+Mesh.cpp 渲染对象
+图形学自学任务
+author：田昊
+
+* 参考：BlauHimmel 一个简单光栅器的实现
+*/
+
+//#include "stdafx.h"
+#include "Mesh.h"
+
+Mesh::Mesh() {
+	_verticesBuffer = nullptr;
+	_verticesCount = 0;
+	_indicesBuffer = nullptr;
+	_indicesCount = 0;
+}
+
+Mesh::Mesh(_INT verticesCount, _INT indexCount) {
+	_verticesCount = verticesCount;
+	_verticesBuffer = new Vertex[_verticesCount];
+	_indicesCount = indexCount;
+	_indicesBuffer = new _INT[_indicesCount];
+}
+
+Mesh::Mesh(const Mesh& other) {
+	_verticesCount = other._verticesCount;
+	if (_verticesCount > 0) {
+		// 清空之前的顶点缓存
+		if (_verticesBuffer != nullptr) {
+			delete[]_verticesBuffer;
+			_verticesBuffer = nullptr;
+		}
+		_verticesBuffer = new Vertex[_verticesCount];
+		for (int i = 0; i < _verticesCount; ++i) {
+			_verticesBuffer[i] = other._verticesBuffer[i];
+		}
+	}
+	_indicesCount = other._indicesCount;
+	if (_indicesCount > 0) {
+		// 清空之前的索引缓存
+		if (_indicesBuffer != nullptr) {
+			delete[]_indicesBuffer;
+			_indicesBuffer = nullptr;
+		}
+		_indicesBuffer = new _INT[_indicesCount];
+		for (int i = 0; i < _indicesCount; ++i) {
+			_indicesBuffer[i] = other._indicesBuffer[i];
+		}
+	}
+	else {
+		if (_verticesBuffer != nullptr) {
+			delete[]_verticesBuffer;
+			_verticesBuffer = nullptr;
+		}
+		if (_indicesBuffer != nullptr) {
+			delete[]_indicesBuffer;
+			_indicesBuffer = nullptr;
+		}
+	}
+}
+
+Mesh::~Mesh()
+{
+	if (_verticesBuffer != nullptr) {
+		delete[]_verticesBuffer;
+		_verticesBuffer = nullptr;
+	}
+	if (_indicesBuffer != nullptr) {
+		delete[]_indicesBuffer;
+		_indicesBuffer = nullptr;
+	}
+}
+
+void Mesh::InitBound(AABB * bound) {
+	_bound = bound;
+	// 根据加入的 mesh 顶点更新包围盒的大小
+	Vector4 minPos = _verticesBuffer[0]._position;
+	Vector4 maxPos = _verticesBuffer[0]._position;
+	for (int i = 1; i < _verticesCount; i++) {
+		Vector4 curr = _verticesBuffer[i]._position;
+		if (minPos._x > curr._x) { minPos._x = curr._x; }
+		if (minPos._y > curr._y) { minPos._y = curr._y; }
+		if (minPos._z > curr._y) { minPos._z = curr._z; }
+		if (maxPos._x < curr._x) { maxPos._x = curr._x; }
+		if (maxPos._y < curr._y) { maxPos._y = curr._y; }
+		if (maxPos._z < curr._y) { maxPos._z = curr._z; }
+	}
+	bound->_vMin = minPos;
+	bound->_vMax = maxPos;
+	bound->_center = (bound->_vMin + bound->_vMax) * 0.5f;
+}
+
+bool Mesh::ReadInOBJ(const char * path) {
+	using std::cout;
+	using std::endl;
+	using std::vector;
+	using std::regex;
+	using std::string;
+
+	// 记录读取行数
+	_INT linesCount = 1;
+
+	// 临时存储从 OBJ 读取的数据
+	vector<Vertex> verticesBuffer;
+	vector<Vector2> textCoordsBuffer;
+	vector<Vector4> normalsBuffer;
+	vector<_INT> indicesBuffer;
+	// 每个顶点的索引存储
+	// NOTE: 不同的 OBJ 模型的每一 f 行的面数不同，要做一个动态存储
+	//		每一个面的顶点索引（v）, 纹理坐标索引（t）和法线索引（n）
+	//		分别对应 vector<_INT> 的 0 1 2 位置
+	vector<vector<_INT>> faces;
+
+	_INT verticesCount = 0, textCoordsCount = 0, normalsCount = 0, indicesCount = 0;
+
+	// 打开文件并读取
+	FILE * file = fopen(path, "r");
+	if (file == nullptr) {
+		cout << "OBJ 文件打开失败" << endl;
+		return false;
+	}
+	else{
+		char lineReader[256];
+		cout << "OBJ 文件打开成功，开始写入" << endl;
+		while (true) {
+			int scanResult = fscanf(file, "%s", lineReader);
+			if (scanResult == EOF) {
+				break;
+			}
+			// 处理顶点信息
+			//	NOTE：在这里初始化并存入顶点，之后在读到面数据（f）时，改动已读入的顶点
+			else if (strcmp(lineReader, "v") == 0) {
+				Vertex inputVertex;
+				_FLOAT x, y, z;
+				scanResult = fscanf(file, "%f %f %fn", &x, &y, &z);
+				if (scanResult != 3) {
+					cout << "错误 - 顶点位置数据不完整：位于第 " << linesCount<< " 行" << endl;
+					return false;
+				}
+
+				// 存入暂存空间
+				inputVertex._position = Vector4(x, y, z, 1.0f);
+				verticesBuffer.push_back(inputVertex);
+				verticesCount++;
+				linesCount++;
+			}
+			else if (strcmp(lineReader, "vt") == 0) {
+				_FLOAT u, v;
+				scanResult = fscanf(file, "%f %fn", &u, &v);
+				if (scanResult != 2) {
+					cout << "错误 - 纹理坐标数据不完整：位于第 " << linesCount << " 行" << endl;
+					return false;
+				}
+				// 存入暂存空间
+				textCoordsBuffer.push_back(Vector2(u, v));
+				textCoordsCount++;
+				linesCount++;
+			}
+			else if (strcmp(lineReader, "vn") == 0) {
+				_FLOAT x, y, z;
+				scanResult = fscanf(file, "%f %f %fn", &x, &y, &z);
+				if (scanResult != 3) {
+					cout << "错误 - 法线数据不完整：位于第 " << linesCount << " 行" << endl;
+					return false;
+				}
+				// 存入暂存空间
+				normalsBuffer.push_back(Vector4(x, y, z, 0.0f));
+				normalsCount++;
+				linesCount++;
+			}
+			else if (strcmp(lineReader, "f") == 0) {
+				// 文本读取缓存
+				//	OBJ 文件中
+				vector<string> facesInput;
+
+				// 读入当前面数据文本（以空格分隔）
+				fgets(lineReader, 256, file);
+				string faceLine(lineReader);
+				std::istringstream iss(faceLine);
+				for (string s; iss >> s;) {
+					facesInput.push_back(s);
+				}
+
+				// 判断每一个面的数据构成
+				// NOTE：有些 OBJ 文件中的面可以忽略纹理贴图索引甚至法线索引，所以需要处理这种情况
+				//	例：f 1//2 3//4 5//6 （都只有坐标索引和法线索引）
+				//	* 数据：顶点位置索引，纹理坐标索引，法线索引
+				regex faceComplete(".+\/.+\/.+");	// 三项数据全有 
+				regex faceNoText(".+\/\/.+");		// 没有纹理坐标
+				regex faceNoNormal(".+\/.+");		// 没有法线
+				regex onlyVertex(".+");				// 只有顶点索引
+
+				// 判断读入面数据的格式然后读取
+				for (string s : facesInput) {
+					vector<_INT> newFace;
+					_INT v, t, n;
+					size_t pos = 0;
+					string token;
+
+					if (std::regex_match(s, faceComplete)) {
+						string delimiter = "/";
+						
+						pos = s.find(delimiter);
+						token = s.substr(0, pos);
+						v = atoi(token.c_str());
+						s.erase(0, pos + delimiter.length());
+						
+						pos = s.find(delimiter);
+						token = s.substr(0, pos);
+						t = atoi(token.c_str());
+						s.erase(0, pos + delimiter.length());
+
+						pos = s.find(delimiter);
+						n = atoi(s.c_str());
+					}
+					else if (std::regex_match(s, faceNoText)) {
+						string delimiter = "//";
+
+						pos = s.find(delimiter);
+						token = s.substr(0, pos);
+						v = atoi(token.c_str());
+						s.erase(0, pos + delimiter.length());
+
+						t = -1;	// 不存在赋值 -1
+
+						pos = s.find(delimiter);
+						n = atoi(s.c_str());
+					}
+					else if (std::regex_match(s, faceNoNormal)) {
+						string delimiter = "/";
+
+						pos = s.find(delimiter);
+						token = s.substr(0, pos);
+						v = atoi(token.c_str());
+						s.erase(0, pos + delimiter.length());
+
+						pos = s.find(delimiter);
+						t = atoi(s.c_str());
+
+						n = -1;	// 不存在赋值 -1
+					}
+					else if (std::regex_match(s, onlyVertex)) {
+						v = atoi(s.c_str());
+						t = -1;	// 不存在赋值 -1
+						n = -1;	// 不存在赋值 -1
+					}
+
+					// 因为 f 行的索引是从 1 开始的，所以在这里我们要减 1
+					newFace.push_back(v - 1);
+					newFace.push_back(t - 1);
+					newFace.push_back(n - 1);
+					
+					faces.push_back(newFace);
+				}
+				linesCount++;
+			}
+			// 其他行（目前忽略不处理）
+			else if (strcmp(lineReader, "#") == 0 || strcmp(lineReader, "g") == 0 ||
+				strcmp(lineReader, "s") == 0 || strcmp(lineReader, "usemtl") == 0) {
+				linesCount++;
+			}
+		}
+
+		fclose(file);
+
+		// 写入读写缓存
+		for (auto face : faces) {
+			_INT v = 0, t = 1, n = 2;
+
+			// 将顶点索引写入顶点索引缓存中
+			indicesBuffer.push_back(face[v]);
+
+			// 将其他索引对应数据加入顶点
+			if (face[t] > -1) {
+				verticesBuffer[face[v]]._u = textCoordsBuffer[face[t]]._x;
+				verticesBuffer[face[v]]._v = textCoordsBuffer[face[t]]._y;
+			}
+			else {
+				verticesBuffer[face[v]]._u = 1;
+				verticesBuffer[face[v]]._v = 1;
+			}
+			if (face[n] > -1) {
+				verticesBuffer[face[v]]._vertexNormal = normalsBuffer[face[n]];
+			}
+			else {
+				verticesBuffer[face[v]]._vertexNormal = Vector4();
+			}
+			indicesCount++;
+		}
+
+		cout << "OBJ 写入完毕，关闭文件" << endl;		
+		cout << "该模型的数据如下：" << endl;
+		cout << " * 顶点坐标数量：" << verticesCount << endl;
+		cout << " * 贴图坐标数量：" << textCoordsCount << endl;
+		cout << " * 法线数量：" << normalsCount << endl;
+		cout << " * 顶点索引数量：" << indicesCount << endl;
+
+		// 读取完文件后赋值给 Mesh
+		_verticesCount = verticesCount;
+		if (_verticesCount > 0) {
+			// 清空之前的顶点缓存
+			if (_verticesBuffer != nullptr) {
+				delete[]_verticesBuffer;
+				_verticesBuffer = nullptr;
+			}
+			_verticesBuffer = new Vertex[_verticesCount];
+			for (int i = 0; i < _verticesCount; ++i) {
+				_verticesBuffer[i] = verticesBuffer[i];
+			}
+		}
+		_indicesCount = indicesCount;
+		if (_indicesCount > 0) {
+			// 清空之前的索引缓存
+			if (_indicesBuffer != nullptr) {
+				delete[]_indicesBuffer;
+				_indicesBuffer = nullptr;
+			}
+			_indicesBuffer = new _INT[_indicesCount];
+			for (int i = 0; i < _indicesCount; ++i) {
+				_indicesBuffer[i] = indicesBuffer[i];
+			}
+		}
+	}
+	return true;
+}
+
+void Mesh::Info() {
+	using std::cout;
+	using std::endl;
+
+	cout << "顶点信息如下：" << endl;
+	for (auto i = 0; i < _verticesCount; i++) {
+		_verticesBuffer[i].Info();
+		cout << endl;
+	}
+
+	cout << "顶点索引如下：" << endl;
+	for (auto i = 0; i < _indicesCount; i += 3) {
+		cout << _indicesBuffer[i] << "/" << _indicesBuffer[i + 1] << "/" << _indicesBuffer[i + 2] << endl;
+	}
+}
